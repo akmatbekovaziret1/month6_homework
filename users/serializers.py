@@ -10,18 +10,39 @@ class UserBaseSerializer(serializers.Serializer):
 
 
 class AuthValidateSerializer(UserBaseSerializer):
-    pass
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only = True)
 
 
 class RegisterValidateSerializer(UserBaseSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only = True)
+    phone_number = serializers.CharField(
+        required = False,
+        allow_blank = True 
+    )
+    
     def validate_email(self, email):
-        try:
-            CustomUser.objects.get(email=email)
-        except:
-            return email
-        raise ValidationError('User уже существует!')
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError('User уже существует!')
 
+        return email
 
+    def validate_phone_number(self, phone_number):
+        if not phone_number:
+            return phone_number
+        
+        if not phone_number.isdigit():
+            raise ValidationError("Phone number must contain digits only!")
+        
+        if not phone_number.startswith("996"):
+            raise ValidationError("Phone number must start with 996!")
+        
+        if len(phone_number) != 12:
+            raise ValidationError("The length of phone number must be 12!")
+        
+        return phone_number
+        
 class ConfirmationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     code = serializers.CharField(max_length=6)
