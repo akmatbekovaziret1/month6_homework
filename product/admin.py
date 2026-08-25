@@ -9,8 +9,9 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ReviewInline]
     search_fields = ['title']
     list_filter = ['price', 'category']
-    list_display = ['title', 'price', 'category']
+    list_display = ['title', 'price', 'category', 'created_at']
     list_editable = ['price']
-
+    readonly_fields = ['created_at']
+    
 admin.site.register(Category)
 admin.site.register(Product, ProductAdmin)
