@@ -19,6 +19,8 @@ from .serializers import (
 )
 
 from common.permissions import IsAuth, IsAnon, CanEditWithIn15Minutes, IsModerator
+from common.validators import validate_product_creation_age
+
 PAGE_SIZE = 5
 
 
@@ -72,6 +74,12 @@ class ProductListCreateAPIView(ListCreateAPIView):
     permission_classes = (IsAuth | IsAnon | IsModerator)
     
     def post(self, request, *args, **kwargs):
+        token_data = request.auth.get("email")
+        print(f"email: {token_data}")
+        user_id = request.auth.get("user_id")
+        birthdate = request.auth.get("birthdate")
+        validate_product_creation_age(birthdate)
+        
         serializer = ProductValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -87,7 +95,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
             description=description,
             price=price,
             category=category,
-            owner = request.user,
+            owner = user_id,
         )
 
         return Response(data=ProductSerializer(product).data,

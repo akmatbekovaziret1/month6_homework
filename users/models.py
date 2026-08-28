@@ -9,7 +9,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     avatar = models.URLField()
-
+    birthdate = models.DateField(null=True, blank=True)
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'

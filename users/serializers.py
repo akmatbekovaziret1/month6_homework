@@ -2,8 +2,18 @@ from rest_framework import serializers
 # from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
 from users.models import ConfirmationCode, CustomUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['email'] = user.email
+        token['avatar'] = user.avatar
+        # по дефолту birthdatе это date object, но для json надо перевести в string
+        token['birthdate'] = str(user.birthdate) if user.birthdate else None
+        return token
+    
 class UserBaseSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -21,6 +31,8 @@ class RegisterValidateSerializer(UserBaseSerializer):
         required = False,
         allow_blank = True 
     )
+    birthdate = serializers.DateField(required=False, allow_null=True)
+    
     
     def validate_email(self, email):
         if CustomUser.objects.filter(email=email).exists():
