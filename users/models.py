@@ -4,14 +4,27 @@ from users.managers import CustomUserManager
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    
+    first_name = models.CharField(max_length=150, blank = True)
+    last_name = models.CharField(max_length=150, blank = True)
+    
     phone_number = models.CharField(max_length=12, null = True, blank = True)
+    
+    avatar = models.URLField(blank=True)
+    
+    birthdate = models.DateField(null=True, blank=True)
     
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    avatar = models.URLField()
-    birthdate = models.DateField(null=True, blank=True)
+    
+    registration_source = models.CharField(
+        max_length=150,
+        default = "local"
+    )
+    
     objects = CustomUserManager()
 
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ["avatar", "phone_number"]
 
