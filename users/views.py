@@ -10,7 +10,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.models import ConfirmationCode, CustomUser
+from users.models import CustomUser
 from .serializers import (
     AuthValidateSerializer,
     ConfirmationSerializer,
@@ -18,7 +18,7 @@ from .serializers import (
     CustomTokenObtainPairSerializer
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
-
+from django.core.cache import cache 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -71,9 +71,11 @@ class RegistrationAPIView(CreateAPIView):
 
             code = "".join(random.choices(string.digits, k=6))
 
-            ConfirmationCode.objects.create(
-                user=user,
-                code=code
+
+            cache.set(
+                f"confirmation_code:{user.id}",
+                code,
+                timeout=300
             )
 
         return Response(
@@ -98,7 +100,7 @@ class ConfirmUserAPIView(CreateAPIView):
 
             token, _ = Token.objects.get_or_create(user=user)
 
-            ConfirmationCode.objects.filter(user=user).delete()
+            cache.delete(f"confirmation_code:{user.id}")
 
         return Response(
             status=status.HTTP_200_OK,
