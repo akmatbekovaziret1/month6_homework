@@ -21,8 +21,8 @@ from .serializers import (
 from common.permissions import IsAuth, IsAnon, CanEditWithIn15Minutes, IsModerator
 from common.validators import validate_product_creation_age
 
+from .tasks import process_new_product, send_product_created_email
 PAGE_SIZE = 5
-
 
 class CustomPagination(PageNumberPagination):
     def get_paginated_response(self, data):
@@ -98,10 +98,20 @@ class ProductListCreateAPIView(ListCreateAPIView):
             owner = user_id,
         )
 
+        process_new_product.delay(product.id)
+        
+        send_product_created_email.delay(
+            request.user.email,
+            product.title
+        )
+        
         return Response(data=ProductSerializer(product).data,
                         status=status.HTTP_201_CREATED)
 
     def get(self, request, *args, **kwargs):
+        from product.tasks import download
+        download.delay()
+        
         from django.core.cache import cache 
         cached_data = cache.get("product_list")
         if cached_data: 
